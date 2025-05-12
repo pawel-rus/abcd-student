@@ -15,8 +15,28 @@ pipeline {
         stage('Example') {
             steps {
                 echo 'Hello!'
-                sh 'ls -la'
             }
+        }
+
+        stage('[ZAP] passive-scan) {
+            steps {
+                sh 'mkdir -p results/'
+                sh '''
+                    docker run --name juice-shop -d --rm \
+                        -p 3000:3000 \
+                        bkimminich/juice-shop
+                    sleep 5
+                '''
+                sh '''
+                    docker run --name zap \
+                        --add-host=host.docker.internal:host-gateway \
+                        -v ${WORKSPACE}/.zap:/zap/wrk/:rw \
+                        -t ghcr.io/zaproxy/zaproxy:stable bash -c "\
+                        zap.sh -cmd -addonupdate; \
+                        zap.sh -cmd -addoninstall communityScripts -addoninstall pscanrulesAlpha -addoninstall pscanrulesBeta; \
+                        zap.sh -cmd -autorun /zap/wrk/passive_scan.yaml" \
+                        || true
+                ''' 
         }
     }
 }
