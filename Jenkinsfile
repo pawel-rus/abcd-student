@@ -49,14 +49,13 @@ pipeline {
                 sh '''
                     echo "ls .zap directory:"
                     ls -l ${WORKSPACE}/.zap
-                    ls -l ${WORKSPACE}/.zap
                     echo "Zawartość passive.yaml:"
                     cat ${WORKSPACE}/.zap/passive.yaml || echo "Brak pliku passive.yaml!"
                 '''
                 sh '''
                     docker run --name zap \
                         --add-host=host.docker.internal:host-gateway \
-                        -v ${WORKSPACE}/.zap:/zap/wrk/:rw \
+                        -v ${WORKSPACE}/.zap:/zap/wrk/.zap:rw \
                         -t ghcr.io/zaproxy/zaproxy:stable bash -c "zap.sh -cmd -addonupdate && zap.sh -cmd -addoninstall communityScripts -addoninstall pscanrulesAlpha -addoninstall pscanrulesBeta && zap.sh -cmd -autorun /zap/wrk/.zap/passive.yaml" || true
                 ''' 
             }
