@@ -47,17 +47,18 @@ pipeline {
                     sleep 5
                 '''
                 sh '''
-                    echo "ls .zap directory:"
+                    echo "Listing contents of .zap directory in Jenkins workspace:"
                     ls -l ${WORKSPACE}/.zap
-                    echo "Zawartość passive.yaml:"
-                    cat ${WORKSPACE}/.zap/passive.yaml || echo "Brak pliku passive.yaml!"
+                    echo "Contents of passive.yaml in Jenkins workspace:"
+                    cat ${WORKSPACE}/.zap/passive.yaml || echo "File passive.yaml not found!"
                 '''
                 sh '''
+                    echo "Listing contents of /zap/wrk/.zap directory in the ZAP container:"
                     docker run --name zap \
                         --add-host=host.docker.internal:host-gateway \
                         -v ${WORKSPACE}/.zap:/zap/wrk/.zap:rw \
                         -t ghcr.io/zaproxy/zaproxy:stable bash -c "ls -l /zap/wrk/.zap"
-                ''' 
+                '''
             }
         }
     }
