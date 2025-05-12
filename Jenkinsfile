@@ -18,6 +18,25 @@ pipeline {
             }
         }
 
+        // Stage to ensure no conflicting containers exist
+        stage('Ensure No Conflicting Containers') {
+            steps {
+                script {
+                    // Stopping and removing any existing juice-shop container
+                    sh '''
+                        docker ps -a -q --filter "name=juice-shop" | xargs --no-run-if-empty docker stop
+                        docker ps -a -q --filter "name=juice-shop" | xargs --no-run-if-empty docker rm
+                    '''
+                    
+                    // Stopping and removing any existing zap container
+                    sh '''
+                        docker ps -a -q --filter "name=zap" | xargs --no-run-if-empty docker stop
+                        docker ps -a -q --filter "name=zap" | xargs --no-run-if-empty docker rm
+                    '''
+                }
+            }
+        }
+        
         stage('[ZAP] passive-scan') {
             steps {
                 sh 'mkdir -p results/'
