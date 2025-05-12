@@ -37,6 +37,8 @@ pipeline {
                         zap.sh -cmd -autorun /zap/wrk/passive_scan.yaml" \
                         || true
                 ''' 
+            }
         }
     }
 }
+
