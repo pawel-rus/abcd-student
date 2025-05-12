@@ -47,6 +47,13 @@ pipeline {
                     sleep 5
                 '''
                 sh '''
+                    echo "ls .zap directory:"
+                    ls -l ${WORKSPACE}/.zap
+                    ls -l ${WORKSPACE}/.zap
+                    echo "Zawartość passive.yaml:"
+                    cat ${WORKSPACE}/.zap/passive.yaml || echo "Brak pliku passive.yaml!"
+                '''
+                sh '''
                     docker run --name zap \
                         --add-host=host.docker.internal:host-gateway \
                         -v ${WORKSPACE}/.zap:/zap/wrk/:rw \
