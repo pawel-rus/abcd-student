@@ -52,12 +52,27 @@ pipeline {
                     echo "Contents of passive.yaml in Jenkins workspace:"
                     cat ${WORKSPACE}/.zap/passive.yaml || echo "File passive.yaml not found!"
                 '''
+                // Uruchomienie ZAP i skopiowanie plików
                 sh '''
-                    echo "Listing contents of /zap/wrk/.zap directory in the ZAP container:"
-                    docker run --name zap \
+                    echo "Starting ZAP container for scanning..."
+                    docker run -d --name zap \
                         --add-host=host.docker.internal:host-gateway \
-                        -v ${WORKSPACE}/.zap:/zap/wrk/.zap:rw \
-                        -t ghcr.io/zaproxy/zaproxy:stable bash -c "ls -l /zap/wrk/.zap"
+                        ghcr.io/zaproxy/zaproxy:stable sleep 60
+        
+                    echo "Copying scan configuration into ZAP container..."
+                    docker cp ${WORKSPACE}/.zap/. zap:/zap/wrk/.zap/
+        
+                    echo "Listing contents of /zap/wrk/.zap inside the ZAP container:"
+                    docker exec zap ls -l /zap/wrk/.zap
+        
+                    
+                    echo "Running ZAP passive scan with addon installation and autorun..."
+                    docker exec zap bash -c "zap.sh -cmd -addonupdate && \
+                        zap.sh -cmd -addoninstall communityScripts && \
+                        zap.sh -cmd -addoninstall pscanrulesAlpha && \
+                        zap.sh -cmd -addoninstall pscanrulesBeta && \
+                        zap.sh -cmd -autorun /zap/wrk/.zap/passive.yaml"
+
                 '''
             }
         }
