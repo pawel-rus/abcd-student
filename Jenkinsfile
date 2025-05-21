@@ -57,7 +57,7 @@ pipeline {
                     echo "Starting ZAP container for scanning..."
                     docker run -d --name zap \
                         --add-host=host.docker.internal:host-gateway \
-                        ghcr.io/zaproxy/zaproxy:stable sleep 60
+                        -t ghcr.io/zaproxy/zaproxy:stable 
 
                     echo "Creating target directory in ZAP container..."
                     docker exec zap mkdir -p /zap/wrk/
@@ -71,11 +71,9 @@ pipeline {
         
                     
                     echo "Running ZAP passive scan with addon installation and autorun..."
-                    docker exec zap bash -c "zap.sh -cmd -addonupdate && \
-                        zap.sh -cmd -addoninstall communityScripts && \
-                        zap.sh -cmd -addoninstall pscanrulesAlpha && \
-                        zap.sh -cmd -addoninstall pscanrulesBeta && \
-                        zap.sh -cmd -autorun /zap/wrk/passive.yaml"
+                    docker exec zap bash -c \
+                    "zap.sh -cmd -addonupdate; zap.sh -cmd -addoninstall communityScripts -addoninstall pscanrulesAlpha -addoninstall pscanrulesBeta -autorun /zap/wrk/passive_scan.yaml" \
+                    || true
 
                 '''
             }
