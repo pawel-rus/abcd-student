@@ -60,13 +60,14 @@ pipeline {
                         ghcr.io/zaproxy/zaproxy:stable sleep 60
 
                     echo "Creating target directory in ZAP container..."
-                    docker exec zap mkdir -p /zap/wrk/.zap
-                    
+                    docker exec zap mkdir -p /zap/wrk/
+                    docker exec zap mkdir -p /zap/wrk/reports
+
                     echo "Copying scan configuration into ZAP container..."
-                    docker cp ${WORKSPACE}/.zap/. zap:/zap/wrk/.zap/
+                    docker cp ${WORKSPACE}/.zap/. zap:/zap/wrk/
         
                     echo "Listing contents of /zap/wrk/.zap inside the ZAP container:"
-                    docker exec zap ls -l /zap/wrk/.zap
+                    docker exec zap ls -l /zap/wrk/
         
                     
                     echo "Running ZAP passive scan with addon installation and autorun..."
@@ -74,7 +75,7 @@ pipeline {
                         zap.sh -cmd -addoninstall communityScripts && \
                         zap.sh -cmd -addoninstall pscanrulesAlpha && \
                         zap.sh -cmd -addoninstall pscanrulesBeta && \
-                        zap.sh -cmd -autorun /zap/wrk/.zap/passive.yaml"
+                        zap.sh -cmd -autorun /zap/wrk/passive.yaml"
 
                 '''
             }
