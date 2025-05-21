@@ -58,7 +58,10 @@ pipeline {
                     docker run -d --name zap \
                         --add-host=host.docker.internal:host-gateway \
                         ghcr.io/zaproxy/zaproxy:stable sleep 60
-        
+
+                    echo "Creating target directory in ZAP container..."
+                    docker exec zap mkdir -p /zap/wrk/.zap
+                    
                     echo "Copying scan configuration into ZAP container..."
                     docker cp ${WORKSPACE}/.zap/. zap:/zap/wrk/.zap/
         
