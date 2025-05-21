@@ -12,11 +12,6 @@ pipeline {
                 }
             }
         }
-        stage('Example') {
-            steps {
-                echo 'Hello!'
-            }
-        }
 
         // Stage to ensure no conflicting containers exist
         stage('Ensure No Conflicting Containers') {
@@ -39,43 +34,53 @@ pipeline {
         
         stage('[ZAP] passive-scan') {
             steps {
-                sh 'mkdir -p results/'
+                sh 'mkdir -p ${WORKSPACE}/results/'
+                sh 'mkdir -p "${WORKSPACE}/.zap/reports"'
                 sh '''
                     docker run --name juice-shop -d --rm \
                         -p 3000:3000 \
                         bkimminich/juice-shop
                     sleep 5
                 '''
-                sh '''
-                    echo "Listing contents of .zap directory in Jenkins workspace:"
-                    ls -l ${WORKSPACE}/.zap
-                    echo "Contents of passive.yaml in Jenkins workspace:"
-                    cat ${WORKSPACE}/.zap/passive.yaml || echo "File passive.yaml not found!"
-                '''
-                // Uruchomienie ZAP i skopiowanie plików
-                sh '''
-                    echo "Starting ZAP container for scanning..."
-                    docker run -d --name zap \
+                 sh '''
+                    docker run --name zap \
                         --add-host=host.docker.internal:host-gateway \
-                        -t ghcr.io/zaproxy/zaproxy:stable 
+                        -v "${WORKSPACE}/.zap/":/zap/wrk/:rw \
+                        -t ghcr.io/zaproxy/zaproxy:stable bash -c \
+                        "zap.sh -cmd -addonupdate; zap.sh -cmd -addoninstall communityScripts -addoninstall pscanrulesAlpha -addoninstall pscanrulesBeta -autorun /zap/wrk/passive_scan.yaml" \
+                        || true
+                '''
+                
+                // sh '''
+                //     echo "Listing contents of .zap directory in Jenkins workspace:"
+                //     ls -l ${WORKSPACE}/.zap
+                //     echo "Contents of passive.yaml in Jenkins workspace:"
+                //     cat ${WORKSPACE}/.zap/passive.yaml || echo "File passive.yaml not found!"
+                // '''
+                // Uruchomienie ZAP i skopiowanie plików
+                // sh '''
+                //     echo "Starting ZAP container for scanning..."
+                //     docker run -d --name zap \
+                //         --add-host=host.docker.internal:host-gateway \
+                //         -t ghcr.io/zaproxy/zaproxy:stable 
 
-                    echo "Creating target directory in ZAP container..."
-                    docker exec zap mkdir -p /zap/wrk/
-                    docker exec zap mkdir -p /zap/wrk/reports
+                //     echo "Creating target directory in ZAP container..."
+                //     docker exec zap mkdir -p /zap/wrk/
+                //     docker exec zap mkdir -p /zap/wrk/reports
 
-                    echo "Copying scan configuration into ZAP container..."
-                    docker cp ${WORKSPACE}/.zap/. zap:/zap/wrk/
+                //     echo "Copying scan configuration into ZAP container..."
+                //     docker cp ${WORKSPACE}/.zap/. zap:/zap/wrk/
         
-                    echo "Listing contents of /zap/wrk/.zap inside the ZAP container:"
-                    docker exec zap ls -l /zap/wrk/
+                //     echo "Listing contents of /zap/wrk/.zap inside the ZAP container:"
+                //     docker exec zap ls -l /zap/wrk/
         
                     
-                    echo "Running ZAP passive scan with addon installation and autorun..."
-                    docker exec zap bash -c \
-                    "zap.sh -cmd -addonupdate; zap.sh -cmd -addoninstall communityScripts -addoninstall pscanrulesAlpha -addoninstall pscanrulesBeta -autorun /zap/wrk/passive_scan.yaml" \
-                    || true
+                //     echo "Running ZAP passive scan with addon installation and autorun..."
+                //     docker exec zap bash -c \
+                //     "zap.sh -cmd -addonupdate; zap.sh -cmd -addoninstall communityScripts -addoninstall pscanrulesAlpha -addoninstall pscanrulesBeta -autorun /zap/wrk/passive_scan.yaml" \
+                //     || true
 
-                '''
+                // '''
             }
         }
     }
