@@ -50,14 +50,19 @@ pipeline {
                 sh "ls -l ${env.WORKSPACE}/.zap/"
                 sh "cat ${env.WORKSPACE}/.zap/passive_scan.yaml || echo 'YAML not found'"
 
-                 sh '''
+                 sh """
                     docker run --name zap \
                         --add-host=host.docker.internal:host-gateway \
-                        -v /var/jenkins_home/workspace/pipeline1/.zap/:/zap/wrk/:rw \
-                        -t ghcr.io/zaproxy/zaproxy:stable bash -c \
-                        "zap.sh -cmd -addonupdate; zap.sh -cmd -addoninstall communityScripts -addoninstall pscanrulesAlpha -addoninstall pscanrulesBeta -autorun /zap/wrk/passive_scan.yaml" \
-                        || true
-                '''
+                        -v ${env.WORKSPACE}/.zap/:/zap/wrk/:rw \
+                        -t ghcr.io/zaproxy/zaproxy:stable bash -c '
+                            zap.sh -cmd -addonupdate &&
+                            zap.sh -cmd -addoninstall communityScripts &&
+                            zap.sh -cmd -addoninstall pscanrulesAlpha &&
+                            zap.sh -cmd -addoninstall pscanrulesBeta &&
+                            zap.sh -cmd -autorun /zap/wrk/passive_scan.yaml
+                        ' || true
+                """
+
                 
                 // sh '''
                 //     echo "Listing contents of .zap directory in Jenkins workspace:"
