@@ -46,9 +46,6 @@ pipeline {
                     echo "WORKSPACE path: ${env.WORKSPACE}"
                 }
                 
-                sh "cp .zap/passive.yaml ${env.WORKSPACE}/.zap/passive_scan.yaml"
-                sh "ls -l ${env.WORKSPACE}/.zap/"
-                sh "cat ${env.WORKSPACE}/.zap/passive_scan.yaml || echo 'YAML not found'"
 
                  sh """
                     docker run --name zap \
@@ -59,7 +56,7 @@ pipeline {
                             zap.sh -cmd -addoninstall communityScripts &&
                             zap.sh -cmd -addoninstall pscanrulesAlpha &&
                             zap.sh -cmd -addoninstall pscanrulesBeta &&
-                            zap.sh -cmd -autorun /zap/wrk/passive_scan.yaml
+                            zap.sh -cmd -autorun /zap/wrk/passive.yaml
                         ' || true
                 """
 
