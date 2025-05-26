@@ -42,10 +42,14 @@ pipeline {
                         bkimminich/juice-shop
                     sleep 5
                 '''
+                script {
+                    echo "WORKSPACE path: ${env.WORKSPACE}"
+                }
+
                  sh '''
                     docker run --name zap \
                         --add-host=host.docker.internal:host-gateway \
-                        -v "${WORKSPACE}/.zap/":/zap/wrk/:rw \
+                        -v /var/jenkins_home/workspace/pipeline1/.zap/:/zap/wrk/:rw \
                         -t ghcr.io/zaproxy/zaproxy:stable bash -c \
                         "zap.sh -cmd -addonupdate; zap.sh -cmd -addoninstall communityScripts -addoninstall pscanrulesAlpha -addoninstall pscanrulesBeta -autorun /zap/wrk/passive_scan.yaml" \
                         || true
