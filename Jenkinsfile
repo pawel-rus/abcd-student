@@ -48,7 +48,7 @@ pipeline {
                 
                 sh "cp .zap/passive.yaml ${env.WORKSPACE}/.zap/passive_scan.yaml"
                 sh "ls -l ${env.WORKSPACE}/.zap/"
-                sh "cat ${env.WORKSPACE}/.zap/passive_scan.yaml || echo 'YAML not found'
+                sh "cat ${env.WORKSPACE}/.zap/passive_scan.yaml || echo 'YAML not found'"
 
                  sh '''
                     docker run --name zap \
