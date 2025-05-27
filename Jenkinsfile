@@ -47,18 +47,32 @@ pipeline {
                 }
                 
 
-                 sh """
-                    docker run --name zap \
+                //  sh """
+                //     docker run --name zap \
+                //         --add-host=host.docker.internal:host-gateway \
+                //         -v ${env.WORKSPACE}/.zap/:/zap/wrk/:rw \
+                //         -t ghcr.io/zaproxy/zaproxy:stable bash -c '
+                //             zap.sh -cmd -addonupdate &&
+                //             zap.sh -cmd -addoninstall communityScripts &&
+                //             zap.sh -cmd -addoninstall pscanrulesAlpha &&
+                //             zap.sh -cmd -addoninstall pscanrulesBeta &&
+                //             zap.sh -cmd -autorun /zap/wrk/passive.yaml
+                //         ' || true
+                // """
+                sh '''
+                    docker run -d --name zap \
                         --add-host=host.docker.internal:host-gateway \
-                        -v ${env.WORKSPACE}/.zap/:/zap/wrk/:rw \
-                        -t ghcr.io/zaproxy/zaproxy:stable bash -c '
-                            zap.sh -cmd -addonupdate &&
-                            zap.sh -cmd -addoninstall communityScripts &&
-                            zap.sh -cmd -addoninstall pscanrulesAlpha &&
-                            zap.sh -cmd -addoninstall pscanrulesBeta &&
-                            zap.sh -cmd -autorun /zap/wrk/passive.yaml
-                        ' || true
-                """
+                        -t ghcr.io/zaproxy/zaproxy:stable tail -f /dev/null
+                
+                    docker exec zap mkdir -p /zap/wrk
+                    docker cp ${WORKSPACE}/.zap/. zap:/zap/wrk/
+                    docker exec zap ls -l /zap/wrk
+                    docker exec zap zap.sh -cmd -addonupdate &&
+                    docker exec zap zap.sh -cmd -addoninstall communityScripts &&
+                    docker exec zap zap.sh -cmd -addoninstall pscanrulesAlpha &&
+                    docker exec zap zap.sh -cmd -addoninstall pscanrulesBeta &&
+                    docker exec zap zap.sh -cmd -autorun /zap/wrk/passive.yaml || echo "[autorun failed]"
+                '''
 
                 
                 // sh '''
