@@ -12,25 +12,6 @@ pipeline {
                 }
             }
         }
-
-        // // Stage to ensure no conflicting containers exist
-        // stage('Ensure No Conflicting Containers') {
-        //     steps {
-        //         script {
-        //             // Stopping and removing any existing juice-shop container
-        //             sh '''
-        //                 docker ps -a -q --filter "name=juice-shop" | xargs --no-run-if-empty docker stop
-        //                 docker ps -a -q --filter "name=juice-shop" | xargs --no-run-if-empty docker rm
-        //             '''
-                    
-        //             // Stopping and removing any existing zap container
-        //             sh '''
-        //                 docker ps -a -q --filter "name=zap" | xargs --no-run-if-empty docker stop
-        //                 docker ps -a -q --filter "name=zap" | xargs --no-run-if-empty docker rm
-        //             '''
-        //         }
-        //     }
-        // }
         
         stage('[ZAP] passive-scan') {
             steps {
@@ -56,11 +37,19 @@ pipeline {
 	stage('[OSV] Scan package-lock.json') {
             steps {
                 script {
-                    sh 'osv-scanner scan --lockfile package-lock.json --format json > "${WORKSPACE}/results/osv_scan.json"  || true'
+                	sh 'osv-scanner scan --lockfile package-lock.json --format json > "${WORKSPACE}/results/osv_scan.json"  || true'
+			sh 'osv-scanner scan --lockfile package-lock.json > "${WORKSPACE}/results/osv_scan.txt"  || true'
                 }
-              //  archiveArtifacts artifacts: 'results/osv_scan.json', fingerprint: true
             }
-        }   
+        }
+	    
+	 stage('[TruffleHog] Scan repository') {
+            steps {
+                script {
+                	sh 'trufflehog git file://. --branch main --only-verified --fail --json > "${WORKSPACE}/results/trufflehog_scan.json" || true'
+                }
+            }
+        }
     }
     post {
         always {
@@ -70,7 +59,7 @@ pipeline {
                 docker stop zap juice-shop
                 docker rm zap
             '''
-            archiveArtifacts artifacts: 'results/zap_*.html, results/zap_*.xml, results/osv_scan.json', fingerprint: true
+            archiveArtifacts artifacts: 'results/zap_*.html, results/zap_*.xml, results/osv_scan.json, results/trufflehog_scan.json', fingerprint: true
 
         }
     }
