@@ -38,12 +38,12 @@ pipeline {
             steps {
                 script {
                 	sh 'osv-scanner scan --lockfile package-lock.json --format json > "${WORKSPACE}/results/osv_scan.json"  || true'
-			sh 'osv-scanner scan --lockfile package-lock.json > "${WORKSPACE}/results/osv_scan.txt"  || true'
+			sh 'osv-scanner scan --lockfile package-lock.json --format table > "${WORKSPACE}/results/osv_scan.txt"  || true'
                 }
             }
         }
 	    
-	 stage('[TruffleHog] Scan repository') {
+	 stage('[TruffleHog] Scan main branch') {
             steps {
                 script {
                 	sh 'trufflehog git file://. --branch main --only-verified --fail --json > "${WORKSPACE}/results/trufflehog_scan.json" || true'
@@ -59,7 +59,7 @@ pipeline {
                 docker stop zap juice-shop
                 docker rm zap
             '''
-            archiveArtifacts artifacts: 'results/zap_*.html, results/zap_*.xml, results/osv_scan.json, results/trufflehog_scan.json', fingerprint: true
+            archiveArtifacts artifacts: 'results/zap_*.html, results/zap_*.xml, results/osv_scan.json, results/osv_scan.txt, results/trufflehog_scan.json', fingerprint: true
 
         }
     }
