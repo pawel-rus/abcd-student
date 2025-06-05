@@ -50,6 +50,13 @@ pipeline {
                 }
             }
         }
+	stage('[Semgrep] Scan') {
+            steps {
+                script {
+                    sh 'semgrep scan --config auto --json-output="${WORKSPACE}/results/semgrep_scan.json"'
+                }
+            }
+        }
     }
     post {
         always {
@@ -59,7 +66,7 @@ pipeline {
                 docker stop zap juice-shop
                 docker rm zap
             '''
-            archiveArtifacts artifacts: 'results/zap_*.html, results/zap_*.xml, results/osv_scan.json, results/osv_scan.txt, results/trufflehog_scan.json', fingerprint: true
+            archiveArtifacts artifacts: 'results/zap_*.html, results/zap_*.xml, results/osv_scan.json, results/osv_scan.txt, results/trufflehog_scan.json, results/semgrep_scan.json', fingerprint: true
 
         }
     }
